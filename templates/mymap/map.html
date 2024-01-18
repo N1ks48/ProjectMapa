@@ -15,37 +15,58 @@
             crossorigin="anonymous"></script>
 </head>
 <body>
-<div class="container-fluid">
+<ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" href="/">Головна</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'changes'%}">Внести зміни</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#">Link</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+    </li>
+</ul>
+<div class="container-fluid" style="margin-top: 50px">
     <div class="row">
         <!-- Фильтр слева, занимает 30% ширины -->
-        <div class="col-md-3">
+        <div class="col-md-2 border border-dark rounded bg-light text-dark" style="margin-left: 40px; margin-right: 80px;">
             <form method="post" action="{% url 'maps_filter' %}" class="needs-validation" novalidate>
                 {% csrf_token %}
-                <div class="mb-3">
+                <div class="mb-3 mt-4">
+                    <label for="aptid" class="form-label">ID Аптеки:</label>
+                    <input type="text" class="form-control" aria-label="Sizing example input"
+                           aria-describedby="inputGroup-sizing-default" id="aptid" name="aptid" autocomplete="off">
+                </div>
+                
+                <div class="mb-3 mt-4">
                     <label for="name" class="form-label">Аптека:</label>
                     <input type="text" class="form-control" aria-label="Sizing example input"
                            aria-describedby="inputGroup-sizing-default" id="name" name="name" autocomplete="off">
                 </div>
-                
-                <div class="mb-3">
+
+                <div class="mb-3 mt-4">
                     <label for="city" class="form-label">Місто:</label>
                     <input type="text" class="form-control" aria-label="Sizing example input"
                            aria-describedby="inputGroup-sizing-default" id="city" name="city" autocomplete="off">
                 </div>
-                
-                <div class="mb-3">
-                    <label for="okpo" class="form-label">OKPO:</label>
+
+                <div class="mb-3 mt-4">
+                    <label for="okpo" class="form-label">Фірма:</label>
                     <input type="text" class="form-control" aria-label="Sizing example input"
                            aria-describedby="inputGroup-sizing-default" id="okpo" name="okpo" autocomplete="off">
                 </div>
                 <br>
                 <button type="submit" class="btn btn-primary">Пошук</button>
+                <br>
                 <a href="/" class="btn btn-success btn-sm mt-1">Скинути</a>
             </form>
         </div>
 
         <!-- Карта, занимает оставшиеся 70% ширины -->
-        <div id="map" class="col-md-9" style="height: 500px;"></div>
+        <div id="map" class="col-md-8 mr-4 border border-dark rounded" style="height: 500px;"></div>
     </div>
 </div>
 

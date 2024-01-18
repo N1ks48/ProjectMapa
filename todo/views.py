@@ -31,11 +31,14 @@ def map_view(request):
 
 def maps_filter(request):
     if request.method == 'POST':
+        aptid = request.POST['aptid']
         name = request.POST.get('name')
         city = request.POST.get('city')
         okpo = request.POST.get('okpo')
 
         filters = {}
+        if aptid:
+            filters['ID'] = aptid
         if name:
             filters['NAME'] = name
         if city:
@@ -44,7 +47,7 @@ def maps_filter(request):
             filters['OKPO'] = okpo
 
         if filters:
-            if name or city:
+            if name or city or aptid:
                 conditions = []
                 for key, value in filters.items():
                     if value:
@@ -54,8 +57,10 @@ def maps_filter(request):
                     cursor = connection.cursor()
 
                     qwr = f'''select NAME, MAP_LAT, MAP_LNG from NAU_TEST.FIRMS f
-                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 else f.statusaptekaid end statusaptekaid
-                    from NAU_TEST.FIRMS f left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
+                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 
+                    else f.statusaptekaid end statusaptekaid
+                    from NAU_TEST.FIRMS f 
+                    left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
                     where st.STATUSAPTEKAID = 4 and {' AND '.join(conditions)} '''
                     print(qwr)
 
@@ -76,9 +81,13 @@ def maps_filter(request):
                     cursor = connection.cursor()
 
                     qwr = f'''select NAME, MAP_LAT, MAP_LNG from NAU_TEST.FIRMS f
-                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 else f.statusaptekaid end statusaptekaid
-                    from NAU_TEST.FIRMS f left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                    where st.STATUSAPTEKAID = 4 and parentid in (SELECT id FROM NAU_TEST.FIRMS f where upper(name) like upper('%{okpo}%') and COMMENTS = 'ю') '''
+                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 
+                    else f.statusaptekaid end statusaptekaid
+                    from NAU_TEST.FIRMS f 
+                    left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
+                    where st.STATUSAPTEKAID = 4 and 
+                    parentid in (select id from NAU_TEST.FIRMS f where upper(name) like upper('%{okpo}%') and 
+                    COMMENTS = 'ю') '''
                     print(qwr)
 
                     cursor.execute(qwr)
@@ -94,3 +103,10 @@ def maps_filter(request):
                     return JsonResponse({"error": str(e)}, status=500)
         else:
             return redirect('map_view')
+
+
+def changes_map(request):
+    if request.method == 'POST':
+        pass
+    else:
+        return render(request, 'mymap/changes_map.html')
