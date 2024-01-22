@@ -30,9 +30,9 @@
     </li>
 </ul>
 <div class="container-fluid" style="margin-top: 50px">
-    <div class="row">
+    <div class="row" id="home">
         <!-- Фильтр слева, занимает 30% ширины -->
-        <div class="col-md-2 border border-dark rounded bg-light text-dark" style="margin-left: 40px; margin-right: 80px;">
+        <div class="col-md-2 border border rounded bg-light text-dark" style="height: 510px; margin-left: 40px; margin-right: 80px;">
             <form method="post" action="{% url 'maps_filter' %}" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <div class="mb-3 mt-4">
@@ -40,7 +40,7 @@
                     <input type="text" class="form-control" aria-label="Sizing example input"
                            aria-describedby="inputGroup-sizing-default" id="aptid" name="aptid" autocomplete="off">
                 </div>
-                
+
                 <div class="mb-3 mt-4">
                     <label for="name" class="form-label">Аптека:</label>
                     <input type="text" class="form-control" aria-label="Sizing example input"
@@ -66,7 +66,7 @@
         </div>
 
         <!-- Карта, занимает оставшиеся 70% ширины -->
-        <div id="map" class="col-md-8 mr-4 border border-dark rounded" style="height: 500px;"></div>
+        <div id="map" class="col-md-8 mr-4 border border rounded" style="height: 510px;"></div>
     </div>
 </div>
 

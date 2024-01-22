@@ -13,10 +13,10 @@
 <body>
 <ul class="nav nav-tabs">
     <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="/">Головна</a>
+        <a class="nav-link" aria-current="page" href="/">Головна</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="{% url 'changes' %}">Внести зміни</a>
+        <a class="nav-link active" href="{% url 'changes' %}">Внести зміни</a>
     </li>
     <li class="nav-item">
         <a class="nav-link" href="#">Link</a>
@@ -26,10 +26,10 @@
     </li>
 </ul>
 <div class="container-fluid" style="margin-top: 50px">
-    <div class="row">
+    <div class="row" id="profile">
         <!-- Фильтр слева, занимает 30% ширины -->
-        <div class="col-md-2 border border-dark rounded bg-light text-dark"
-             style="height: 550px; margin-left: 40px; margin-right: 80px;">
+        <div class="col-md-2 border border rounded bg-light text-dark"
+             style="height: 510px; margin-left: 40px; margin-right: 80px;">
             <form method="post" action="{% url 'changes' %}" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <div class="mb-3 mt-4">
@@ -59,15 +59,23 @@
                 <button type="submit" class="btn btn-primary">Пошук</button>
                 <br>
             </form>
+            {% if results %}
             <form action="{% url 'download_data' %}" method="post">
                 {% csrf_token %}
                 {% for result in results %}
                     <input type="hidden" name="results" value="{{ result }}">
                 {% endfor %}
-                <button type="submit" class="bg-transparent border-0">Save
+                <button type="submit" class="bg-transparent border-0">
+                    <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
+                         alt="Submit">
                 </button>
             </form>
-               
+            {% else %}
+            <button type="submit" onclick="downData()" class="bg-transparent border-0">
+                    <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
+                         alt="Submit">
+            </button>
+            {% endif %}
         </div>
 
         <div class="col-md-8" style="max-height: 700px; overflow: auto;">
@@ -100,6 +108,11 @@
         </div>
     </div>
 </div>
+<script>
+    function downData(){
+        alert("Немає даних для вивантаження")
+    }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
         integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
         crossorigin="anonymous"></script>
