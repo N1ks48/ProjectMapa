@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -28,7 +29,7 @@
     <div class="row">
         <!-- Фильтр слева, занимает 30% ширины -->
         <div class="col-md-2 border border-dark rounded bg-light text-dark"
-             style="height: 500px; margin-left: 40px; margin-right: 80px;">
+             style="height: 550px; margin-left: 40px; margin-right: 80px;">
             <form method="post" action="{% url 'changes' %}" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <div class="mb-3 mt-4">
@@ -36,7 +37,7 @@
                     <input type="text" class="form-control" aria-label="Sizing example input"
                            aria-describedby="inputGroup-sizing-default" id="aptid" name="aptid" autocomplete="off">
                 </div>
-                
+
                 <div class="mb-3 mt-4">
                     <label for="name" class="form-label">Аптека:</label>
                     <input type="text" class="form-control" aria-label="Sizing example input"
@@ -58,36 +59,42 @@
                 <button type="submit" class="btn btn-primary">Пошук</button>
                 <br>
             </form>
+            <form action="{% url 'download_data' %}" method="post">
+                {% csrf_token %}
+                {% for result in results %}
+                    <input type="hidden" name="results" value="{{ result }}">
+                {% endfor %}
+                <button type="submit" class="bg-transparent border-0">Save
+                </button>
+            </form>
+               
         </div>
 
-        <div class="col-md-8">
+        <div class="col-md-8" style="max-height: 700px; overflow: auto;">
             <table class="table table-hover">
-                <thead>
+                <thead class="sticky-top">
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">First</th>
-                    <th scope="col">Last</th>
-                    <th scope="col">Handle</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Назва</th>
+                    <th scope="col">ЕРДПОУ</th>
+                    <th scope="col">Адреса</th>
+                    <th scope="col">Місто</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>@mdo</td>
-                </tr>
-                <tr>
-                    <th scope="row">2</th>
-                    <td>Jacob</td>
-                    <td>Thornton</td>
-                    <td>@fat</td>
-                </tr>
-                <tr>
-                    <th scope="row">3</th>
-                    <td colspan="2">Larry the Bird</td>
-                    <td>@twitter</td>
-                </tr>
+                {% for item in results %}
+                    <tr>
+                        <td>{{ item.0 }}</td>
+                        <td>{{ item.1 }}</td>
+                        <td>{{ item.2 }}</td>
+                        <td>{{ item.3 }}</td>
+                        <td>{{ item.4 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9">Немає даних, що задовольняють фільтру</td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
