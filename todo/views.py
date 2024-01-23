@@ -58,61 +58,41 @@ def maps_filter(request):
 
         filters = {}
         if aptid:
-            filters['ID'] = aptid
+            filters['f.ID'] = aptid
         if name:
-            filters['NAME'] = name
+            filters['f.NAME'] = name
         if city:
-            filters['CITY'] = city
+            filters['f.CITY'] = city
         if okpo:
-            filters['OKPO'] = okpo
+            filters['ff.NAME'] = okpo
 
         if filters:
-            if name or city or aptid:
-                conditions = []
-                for key, value in filters.items():
-                    if value:
-                        conditions.append(f"upper({key}) like upper('%{value}%')")
-                try:
+            conditions = []
+            for key, value in filters.items():
+                if value:
+                    conditions.append(f"upper({key}) like upper('%{value}%')")
+            try:
 
-                    qwr = f'''select NAME, MAP_LAT, MAP_LNG from NAU_TEST.FIRMS f
+                qwr = f'''select f.NAME, f.MAP_LAT, f.MAP_LNG from NAU_TEST.FIRMS f
+                    left join nau_test.firms ff on ff.id = f.PARENTID
                     left join (select f.id firmid, case when tc.isclosed = 1 then 7 
                     else f.statusaptekaid end statusaptekaid
                     from NAU_TEST.FIRMS f 
                     left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
                     where st.STATUSAPTEKAID = 4 and {' AND '.join(conditions)} '''
-                    print(qwr)
+                print(qwr)
 
-                    results = execute_sql(qwr)
+                results = execute_sql(qwr)
 
-                    locations = []
-                    for result in results:
-                        name, latitude, longitude = result
-                        locations.append({"name": name, "latitude": latitude, "longitude": longitude})
+                locations = []
+                for result in results:
+                    name, latitude, longitude = result
+                    locations.append({"name": name, "latitude": latitude, "longitude": longitude})
 
-                    return render(request, 'mymap/map.html', {'locations': locations})
-                except Exception as e:
-                    return JsonResponse({"error": str(e)}, status=500)
-            elif okpo:
-                try:
-                    qwr = f'''select NAME, MAP_LAT, MAP_LNG from NAU_TEST.FIRMS f
-                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 
-                    else f.statusaptekaid end statusaptekaid
-                    from NAU_TEST.FIRMS f 
-                    left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                    where st.STATUSAPTEKAID = 4 and 
-                    parentid in (select id from NAU_TEST.FIRMS f where upper(name) like upper('%{okpo}%') and 
-                    COMMENTS = 'ю') '''
-                    print(qwr)
+                return render(request, 'mymap/map.html', {'locations': locations})
+            except Exception as e:
+                return JsonResponse({"error": str(e)}, status=500)
 
-                    results = execute_sql(qwr)
-                    locations = []
-                    for result in results:
-                        name, latitude, longitude = result
-                        locations.append({"name": name, "latitude": latitude, "longitude": longitude})
-
-                    return render(request, 'mymap/map.html', {'locations': locations})
-                except Exception as e:
-                    return JsonResponse({"error": str(e)}, status=500)
         else:
             return redirect('map_view')
 
@@ -126,69 +106,41 @@ def changes_map(request):
 
         filters = {}
         if aptid:
-            filters['ID'] = aptid
+            filters['f.ID'] = aptid
         if name:
-            filters['NAME'] = name
+            filters['f.NAME'] = name
         if city:
-            filters['CITY'] = city
+            filters['f.CITY'] = city
         if okpo:
-            filters['OKPO'] = okpo
-
+            filters['ff.NAME'] = okpo
+        conditions = []
+        for key, value in filters.items():
+            if value:
+                conditions.append(f"upper({key}) like upper('%{value}%')")
         if not filters:
-            try:
-                sql = '''select f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
-                        left join (select f.id firmid, case when tc.isclosed = 1 then 7 
+            sql = '''select f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
+                        left join nau_test.firms ff on ff.id = f.PARENTID
+                        left join (select f.id firmid, case when tc.isclosed = 1 then 7
                         else f.statusaptekaid end statusaptekaid
-                        from NAU_TEST.FIRMS f left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st 
+                        from NAU_TEST.FIRMS f left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st
                         on st.firmid = f.id
                         where st.STATUSAPTEKAID = 4'''
+        else:
+            sql = f'''select  f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
+                        left join nau_test.firms ff on ff.id = f.PARENTID
+                        left join (select f.id firmid, case when tc.isclosed = 1 then 7 
+                        else f.statusaptekaid end statusaptekaid
+                        from NAU_TEST.FIRMS f 
+                        left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
+                        where st.STATUSAPTEKAID = 4 and {' AND '.join(conditions)} '''
 
-                results = execute_sql(sql)
-
-                return render(request, 'mymap/changes_map.html', {'results': results})
-
-            except Exception as e:
-                return JsonResponse({"error": str(e)}, status=500)
-
-        if name or city or aptid:
-            conditions = []
-            for key, value in filters.items():
-                if value:
-                    conditions.append(f"upper({key}) like upper('%{value}%')")
-            try:
-                sql = f'''select id, name, okpo, address2, city from NAU_TEST.FIRMS f
-                            left join (select f.id firmid, case when tc.isclosed = 1 then 7 
-                            else f.statusaptekaid end statusaptekaid
-                            from NAU_TEST.FIRMS f 
-                            left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                            where st.STATUSAPTEKAID = 4 and {' AND '.join(conditions)} '''
-                print(sql)
-
-                results = execute_sql(sql)
-
-                # Выполните фильтрацию данных на основе введенных пользователем значений
-                return render(request, 'mymap/changes_map.html', {'results': results})
-            except Exception as e:
-                return JsonResponse({"error": str(e)}, status=500)
-        elif okpo:
-            try:
-                qwr = f'''select f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
-                left join (select f.id firmid, case when tc.isclosed = 1 then 7 
-                else f.statusaptekaid end statusaptekaid
-                from NAU_TEST.FIRMS f 
-                left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                where st.STATUSAPTEKAID = 4 and 
-                parentid in (select id from NAU_TEST.FIRMS f where upper(name) like upper('%{okpo}%') and 
-                COMMENTS = 'ю') '''
-                print(qwr)
-
-                results = execute_sql(qwr)
-
-                # Выполните фильтрацию данных на основе введенных пользователем значений
-                return render(request, 'mymap/changes_map.html', {'results': results})
-
-            except Exception as e:
-                return JsonResponse({"error": str(e)}, status=500)
+        try:
+            print(sql)
+            results = execute_sql(sql)
+            # Выполните фильтрацию данных на основе введенных пользователем значений
+            return render(request, 'mymap/changes_map.html', {'results': results})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
     else:
         return render(request, 'mymap/changes_map.html')
