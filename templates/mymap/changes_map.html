@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
@@ -60,27 +61,27 @@
                 <br>
             </form>
             {% if results %}
-            <form action="{% url 'download_data' %}" method="post">
-                {% csrf_token %}
-                {% for result in results %}
-                    <input type="hidden" name="results" value="{{ result }}">
-                {% endfor %}
-                <button type="submit" class="bg-transparent border-0">
+                <form action="{% url 'download_data' %}" method="post">
+                    {% csrf_token %}
+                    {% for result in results %}
+                        <input type="hidden" name="results" value="{{ result }}">
+                    {% endfor %}
+                    <button type="submit" class="bg-transparent border-0">
+                        <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
+                             alt="Submit">
+                    </button>
+                </form>
+            {% else %}
+                <button type="submit" onclick="downData()" class="bg-transparent border-0">
                     <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
                          alt="Submit">
                 </button>
-            </form>
-            {% else %}
-            <button type="submit" onclick="downData()" class="bg-transparent border-0">
-                    <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
-                         alt="Submit">
-            </button>
             {% endif %}
         </div>
 
         <div class="col-md-8" style="max-height: 700px; overflow: auto;">
             <table class="table table-hover">
-                <thead class="sticky-top">
+                <thead class="sticky-top" style="background-color: rgb(236,240,245);">
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Назва</th>
@@ -92,7 +93,21 @@
                 <tbody>
                 {% for item in results %}
                     <tr>
-                        <td>{{ item.0 }}</td>
+                        <td>{{ item.0 }}
+                            <br>
+                            <button type="button" class="badge rounded-pill bg-secondary open-modal"
+                                    data-item0="{{ item.0 }}"
+                                    data-item1="{{ item.1 }}"
+                                    data-item2="{{ item.2 }}"
+                                    data-item3="{{ item.3 }}"
+                                    data-item4="{{ item.4 }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#exampleModal"
+                                    @click="openModal"
+                                    style="font-size: 0.55rem;">
+                                Редагувати
+                            </button>
+                        </td>
                         <td>{{ item.1 }}</td>
                         <td>{{ item.2 }}</td>
                         <td>{{ item.3 }}</td>
@@ -108,10 +123,76 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Вікно Редагування</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <h5 class="lead ml-3" id="modalNumber">{{ item.0 }}</h5>
+                    <input type="hidden" id="item_0" name="item_0" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_1">Назва:</label>
+                    <input type="text" id="item_1" name="item_1" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_2">ЕРДПОУ:</label>
+                    <input type="text" id="item_2" name="item_2" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_3">Адреса:</label>
+                    <input type="text" id="item_3" name="item_3" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_4">Місто:</label>
+                    <input type="text" id="item_4" name="item_4" class="form-control" value=""
+                           autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="button" class="btn btn-primary">Редагувати</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
 <script>
-    function downData(){
+    function downData() {
         alert("Немає даних для вивантаження")
     }
+
+    $(document).on('click', '.open-modal', function openModal(event) {
+        // Получение данных из data-item атрибутов кнопки
+        let item0 = $(event.target).data('item0');
+        let item1 = $(event.target).data('item1');
+        let item2 = $(event.target).data('item2');
+        let item3 = $(event.target).data('item3');
+        let item4 = $(event.target).data('item4');
+
+        let results = [item0, item1, item2, item3, item4];
+        populateModal(results)
+        $('#exampleModal').modal('show');
+    });
+
+    // Заполнение полей модального окна данными из строк
+    function populateModal(results) {
+        $('#item_0').val(results[0]);
+        $('#item_1').val(results[1]);
+        $('#item_2').val(results[2]);
+        $('#item_3').val(results[3]);
+        $('#item_4').val(results[4]);
+
+        let modalNumber = results[0];
+        document.getElementById('modalNumber').innerText = 'ID Аптеки: ' + modalNumber;
+    }
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
         integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"

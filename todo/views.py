@@ -19,8 +19,9 @@ def execute_sql(sql):
         # Фиксация изменений и закрытие соединения
         cursor.close()
         connection.close()
-
+        # Возврат значения
         return results
+
     except Exception as e:
         # Обработка ошибок
         return f"Error: {str(e)}"
