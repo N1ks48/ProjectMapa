@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 import cx_Oracle
 from django.http import JsonResponse, HttpResponse
 from openpyxl import Workbook
@@ -29,17 +29,23 @@ def execute_sql(sql):
 
 def map_view(request):
     try:
-        sql = '''select NAME, MAP_LAT, MAP_LNG from NAU_TEST.FIRMS f
-        left join (select f.id firmid, case when tc.isclosed = 1 then 7 else f.statusaptekaid end statusaptekaid
-        from NAU_TEST.FIRMS f left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-        where st.STATUSAPTEKAID = 4'''
+        sql = '''select f.NAME, f.MAP_LAT, f.MAP_LNG, sa.NAME, f.CITY, ff.NAME from NAU_TEST.FIRMS f
+                    left join nau_test.firms ff on ff.id = f.PARENTID
+                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 
+                    else f.statusaptekaid end statusaptekaid
+                    from NAU_TEST.FIRMS f 
+                    left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
+                    left join nau_test.STATUSAPTEKA sa on sa.id = st.STATUSAPTEKAID
+                    where f.MAP_LAT is not null and f.city is not null and st.STATUSAPTEKAID in (2, 3, 4, 7)
+                    and not f.id = 501413'''
 
         rows = execute_sql(sql)
 
         locations = []
-        for row in rows:
-            name, latitude, longitude = row
-            locations.append({"name": name, "latitude": latitude, "longitude": longitude})
+        for result in rows:
+            name, latitude, longitude, status, city, okpo = result
+            locations.append({"name": name, "latitude": latitude, "longitude": longitude, "status": status,
+                              "city": city, "okpo": okpo})
 
     except cx_Oracle.Error as error:
         # Обработка ошибок подключения к базе данных
@@ -66,35 +72,39 @@ def maps_filter(request):
         if okpo:
             filters['ff.NAME'] = okpo
 
-        if filters:
-            conditions = []
-            for key, value in filters.items():
-                if value:
-                    conditions.append(f"upper({key}) like upper('%{value}%')")
-            try:
+        conditions = []
+        for key, value in filters.items():
+            if value:
+                conditions.append(f"upper({key}) like upper('%{value}%')")
 
-                qwr = f'''select f.NAME, f.MAP_LAT, f.MAP_LNG from NAU_TEST.FIRMS f
+        qwr_base = '''select f.NAME, f.MAP_LAT, f.MAP_LNG, sa.NAME, f.CITY, ff.NAME from NAU_TEST.FIRMS f
                     left join nau_test.firms ff on ff.id = f.PARENTID
                     left join (select f.id firmid, case when tc.isclosed = 1 then 7 
                     else f.statusaptekaid end statusaptekaid
                     from NAU_TEST.FIRMS f 
                     left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                    where st.STATUSAPTEKAID = 4 and {' AND '.join(conditions)} '''
-                print(qwr)
+                    left join nau_test.STATUSAPTEKA sa on sa.id = st.STATUSAPTEKAID
+                    where f.MAP_LAT is not null and f.city is not null and st.STATUSAPTEKAID in (2, 3, 4, 7)
+                    and not f.id = 501413'''
 
-                results = execute_sql(qwr)
+        qwr = qwr_base
 
-                locations = []
-                for result in results:
-                    name, latitude, longitude = result
-                    locations.append({"name": name, "latitude": latitude, "longitude": longitude})
+        if conditions:
+            qwr += f" and {' AND '.join(conditions)}"
 
-                return render(request, 'mymap/map.html', {'locations': locations})
-            except Exception as e:
-                return JsonResponse({"error": str(e)}, status=500)
+        try:
+            print(qwr)
+            results = execute_sql(qwr)
 
-        else:
-            return redirect('map_view')
+            locations = []
+            for result in results:
+                name, latitude, longitude, status, city, okpo = result
+                locations.append({"name": name, "latitude": latitude, "longitude": longitude, "status": status,
+                                  "city": city, "okpo": okpo})
+
+            return render(request, 'mymap/map.html', {'locations': locations})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 def changes_map(request):
@@ -113,17 +123,19 @@ def changes_map(request):
             filters['f.CITY'] = city
         if okpo:
             filters['ff.NAME'] = okpo
+
         conditions = []
         for key, value in filters.items():
             if value:
                 conditions.append(f"upper({key}) like upper('%{value}%')")
+
         if not filters:
             sql = '''select f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
                         left join nau_test.firms ff on ff.id = f.PARENTID
                         left join (select f.id firmid, case when tc.isclosed = 1 then 7
                         else f.statusaptekaid end statusaptekaid
-                        from NAU_TEST.FIRMS f left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st
-                        on st.firmid = f.id
+                        from NAU_TEST.FIRMS f 
+                        left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
                         where st.STATUSAPTEKAID = 4'''
         else:
             sql = f'''select  f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f

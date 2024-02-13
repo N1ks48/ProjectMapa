@@ -6,6 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Ukraine Map</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
     <!-- Добавлены стили Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -32,7 +33,8 @@
 <div class="container-fluid" style="margin-top: 50px">
     <div class="row" id="home">
         <!-- Фильтр слева, занимает 30% ширины -->
-        <div class="col-md-2 border border rounded bg-light text-dark" style="height: 510px; margin-left: 40px; margin-right: 80px;">
+        <div class="col-md-2 border border rounded bg-light text-dark"
+             style="height: 510px; margin-left: 40px; margin-right: 80px;">
             <form method="post" action="{% url 'maps_filter' %}" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <div class="mb-3 mt-4">
@@ -42,7 +44,7 @@
                 </div>
 
                 <div class="mb-3 mt-4">
-                    <label for="name" class="form-label">Аптека:</label>
+                    <label for="name" class="form-label">Аптека\Адреса:</label>
                     <input type="text" class="form-control" aria-label="Sizing example input"
                            aria-describedby="inputGroup-sizing-default" id="name" name="name" autocomplete="off">
                 </div>
@@ -60,17 +62,126 @@
                 </div>
                 <br>
                 <button type="submit" class="btn btn-primary">Пошук</button>
-                
-            </form>
-        </div>
 
+            </form>
+            
+            
+        </div>
+        <div class="col-sm-1" style="margin-left: -50px">
+            <button onclick="hideMaps()" class="bg-transparent border-0">
+                <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/map.svg" alt="Submit">
+            </button>
+        <br>
+            {% if results %}
+                <form action="{% url 'download_data' %}" method="post">
+                    {% csrf_token %}
+                    {% for result in results %}
+                        <input type="hidden" name="results" value="{{ result }}">
+                    {% endfor %}
+                    <button type="submit" class="bg-transparent border-0">
+                        <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
+                             alt="Submit">
+                    </button>
+                </form>
+            {% else %}
+                <button type="submit" onclick="downData()" class="bg-transparent border-0">
+                    <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
+                         alt="Submit">
+                </button>
+            {% endif %}
+        </div>
         <!-- Карта, занимает оставшиеся 70% ширины -->
-        <div id="map" class="col-md-8 mr-4 border border rounded" style="height: 510px;"></div>
+        <div class="col-md-8">
+            <div id="map" class="border border rounded bg-light text-dark" style="height: 510px; margin-right: 50px; margin-left: -50px"></div>
+            {% if 'mapsfilter/' in request.path %}
+                <div id="table" style="max-height: 300px; overflow: auto; margin-right: 50px; margin-left: -50px">
+                    <div class="mt-2">
+                        <table class="table table-hover">
+                            <thead class="sticky-top" style="background-color: rgb(236,240,245);">
+                            <tr>
+                                <th scope="col">Назва</th>
+                                <th scope="col">Місто</th>
+                                <th scope="col">Фірма</th>
+                                <th scope="col">Статус</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for item in locations %}
+                                <tr id="row_{{ forloop.counter }}">
+                                    <td>{{ item.name }}
+                                        <br>
+                                        <button type="button" class="badge rounded-pill bg-secondary open-modal"
+                                                data-item0="{{ item.name }}"
+                                                data-item1="{{ item.city }}"
+                                                data-item2="{{ item.okpo }}"
+                                                data-item3="{{ item.status }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#exampleModal"
+                                                @click="openModal"
+                                                style="font-size: 0.55rem;">
+                                            Редагувати
+                                        </button>
+                                    </td>
+                                    <td>{{ item.city }}</td>
+                                    <td>{{ item.okpo }}</td>
+                                    <td>{{ item.status }}</td>
+
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="9">Немає даних, що задовольняють фільтру</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Вікно Редагування</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
 
+                    <h5 class="lead ml-3" id="modalNumber">{{ item.name }}</h5>
+                    <input type="hidden" id="item_0" name="item_0" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_1">Місто:</label>
+                    <input type="text" id="item_1" name="item_1" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_2">Фірма:</label>
+                    <input type="text" id="item_2" name="item_2" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_3">Статус:</label>
+                    <input type="text" id="item_3" name="item_3" class="form-control" value=""
+                           autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="button" class="btn btn-primary">Редагувати</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
+    function downData() {
+        alert("Немає даних для вивантаження")
+    }
+
     let map = L.map('map').setView([49.00, 31.00], 6);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -79,9 +190,65 @@
 
     let locations = {{ locations|safe }};
 
+
     for (let i = 0; i < locations.length; i++) {
         L.marker([locations[i].latitude, locations[i].longitude]).addTo(map)
-            .bindPopup(locations[i].name);
+            .bindPopup(`<b>${locations[i].name}</b><br>${locations[i].city}<br>${locations[i].okpo}<br>Статус: ${locations[i].status}`);
+    }
+
+
+    //Путешествие по карте, по клику на таблице
+    document.addEventListener('DOMContentLoaded', function () {
+        // Добавьте обработчик событий для каждой строки таблицы
+        {% for item in locations %}
+            document.getElementById('row_{{ forloop.counter }}').addEventListener('click', function () {
+                map.setView([{{ item.latitude }}, {{ item.longitude }}], 20); // Центрируйте карту на кликнутых координатах
+            });
+        {% endfor %}
+    });
+
+    $(document).on('click', '.open-modal', function openModal(event) {
+        // Получение данных из data-item атрибутов кнопки
+        let item0 = $(event.target).data('item0');
+        let item1 = $(event.target).data('item1');
+        let item2 = $(event.target).data('item2');
+        let item3 = $(event.target).data('item3');
+
+
+        let results = [item0, item1, item2, item3];
+        populateModal(results)
+        $('#exampleModal').modal('show');
+    });
+
+    // Заполнение полей модального окна данными из строк
+    function populateModal(results) {
+        $('#item_0').val(results[0]);
+        $('#item_1').val(results[1]);
+        $('#item_2').val(results[2]);
+        $('#item_3').val(results[3]);
+
+
+        let modalNumber = results[0];
+        document.getElementById('modalNumber').innerText = 'Аптека: ' + modalNumber;
+    }
+
+    //Скрытие карты
+    function hideMaps() {
+        let mapForm = document.getElementById('map');
+        let tableForm = document.getElementById('table');
+        let mapImage = document.getElementById('mapImage');
+
+        if (mapForm.style.display === 'block') {
+            mapForm.style.display = 'none';
+            tableForm.style.display = 'block';
+            tableForm.style.maxHeight = '500px';
+            mapImage.src = "/static/images/map-fill.svg";
+        } else {
+            mapForm.style.display = 'block';
+            tableForm.style.display = 'block';
+            tableForm.style.maxHeight = '300px';
+            mapImage.src = "/static/images/map.svg";
+        }
     }
 </script>
 
