@@ -6,14 +6,14 @@ import ast
 from datetime import datetime
 
 
-def execute_sql(sql):
+def execute_sql(sql, **kwargs):
     try:
         # Установка соединения с Oracle
         connection = cx_Oracle.connect("NSAR", "L:FYUJAHB", "192.168.201.1:1521/Primus", encoding="UTF-8")
         # Создание курсора
         cursor = connection.cursor()
         # Выполнение SQL-запроса
-        cursor.execute(sql)
+        cursor.execute(sql, kwargs)
         # Получение результатов
         results = cursor.fetchall()
         # Фиксация изменений и закрытие соединения
@@ -25,6 +25,23 @@ def execute_sql(sql):
     except Exception as e:
         # Обработка ошибок
         return f"Error: {str(e)}"
+
+
+def get_option():
+    try:
+        qwerty = '''select okpo, name from NAU_TEST.FIRMS where comments = 'ю' '''
+
+        # Получение результатов
+        options = execute_sql(qwerty)
+        # Фиксация изменений и закрытие соединения
+
+        html_options = ""
+        for key, name in options:
+            html_options += f'<option value="{name}">{key}</option>'
+        return html_options
+    except cx_Oracle.Error as error:
+        # Обработка ошибок подключения к базе данных
+        print(f"Error connecting to Oracle Database: {error}")
 
 
 def map_view(request):
@@ -40,19 +57,22 @@ def map_view(request):
                     and not f.id = 501413'''
 
         rows = execute_sql(sql)
+        html_options = get_option()
 
         locations = []
         for result in rows:
             name, latitude, longitude, status, city, okpo = result
             locations.append({"name": name, "latitude": latitude, "longitude": longitude, "status": status,
                               "city": city, "okpo": okpo})
-
+        context = {'html_options': html_options, 'locations': locations}
     except cx_Oracle.Error as error:
         # Обработка ошибок подключения к базе данных
         print(f"Error connecting to Oracle Database: {error}")
         locations = []
+        html_options = get_option()
+        context = {'html_options': html_options, 'locations': locations}
 
-    return render(request, 'mymap/map.html', {'locations': locations})
+    return render(request, 'mymap/map.html', context)
 
 
 def maps_filter(request):
@@ -95,14 +115,14 @@ def maps_filter(request):
         try:
             print(qwr)
             results = execute_sql(qwr)
-
+            html_options = get_option()
             locations = []
             for result in results:
                 name, latitude, longitude, status, city, okpo = result
                 locations.append({"name": name, "latitude": latitude, "longitude": longitude, "status": status,
                                   "city": city, "okpo": okpo})
-
-            return render(request, 'mymap/map.html', {'locations': locations})
+            context = {'html_options': html_options, 'locations': locations}
+            return render(request, 'mymap/map.html', context)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
