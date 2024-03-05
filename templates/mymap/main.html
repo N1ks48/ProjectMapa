@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Ukraine Map</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <!-- Добавлены стили Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
+    <style>
+        .buttons-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .buttons-container button {
+            margin-right: 10px; /* Добавляем небольшое расстояние между кнопками */
+        }
+    </style>
+</head>
+<body>
+<ul class="nav nav-tabs">
+    {% block main %}
+    {% endblock %}
+</ul>
+<div class="container-fluid" style="margin-top: 50px">
+    <div class="row" id="home">
+        <!-- Фильтр слева, занимает 30% ширины -->
+        <div id="myForm" class="col-md-2 border border rounded bg-light text-dark"
+             style="height: 510px; margin-left: 40px; margin-right: 80px; display: block;">
+            {% block filter %}
+            {% endblock %}
+        </div>
+
+        <div class="col-md-1" style="display: none; margin-left: 50px">
+            {% block button %}
+            {% endblock %}
+        </div>
+        <div class="col-md-8">
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="maps" role="tabpanel" aria-labelledby="maps-tab">
+                    {% block maps %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Вікно Редагування</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <nav>
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home"
+                            type="button" role="tab" aria-controls="nav-home" aria-selected="true">Home
+                    </button>
+                    <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile"
+                            type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Profile
+                    </button>
+                    <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact"
+                            type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Contact
+                    </button>
+                </div>
+            </nav>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+
+                    <h5 class="lead ml-3" id="modalNumber">{{ item.name }}</h5>
+                    <input type="hidden" id="item_0" name="item_0" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_1">Місто:</label>
+                    <input type="text" id="item_1" name="item_1" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_2">Фірма:</label>
+                    <input type="text" id="item_2" name="item_2" class="form-control" value=""
+                           autocomplete="off">
+
+                    <label for="item_3">Статус:</label>
+                    <input type="text" id="item_3" name="item_3" class="form-control" value=""
+                           autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="button" class="btn btn-primary">Редагувати</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+{% block script %}
+{% endblock %}
+<script>
+    function hideFilter() {
+        let myForm = document.getElementById('myForm');
+        let mapsDiv = document.querySelector('.tab-content');
+        let mapImage = document.getElementById('mapImage');
+        let buttonsDiv = document.querySelector('.col-md-1');
+
+        if (myForm.style.display === 'block') {
+            myForm.style.display = 'none';
+            mapsDiv.parentElement.classList.remove('col-md-8');
+            mapsDiv.parentElement.classList.add('col-md-10');
+            mapImage.src = "/static/images/zoom-in.svg";
+            buttonsDiv.style.display = 'block'; // Показываем кнопки
+
+        } else {
+            myForm.style.display = 'block';
+            mapsDiv.parentElement.classList.remove('col-md-10');
+            mapsDiv.parentElement.classList.add('col-md-8');
+            mapImage.src = "/static/images/zoom-out.svg";
+            buttonsDiv.style.display = 'none'; // Скрываем кнопки
+        }
+    }
+</script>
+
+<!-- Добавлены скрипты Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+        integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+        integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
+        crossorigin="anonymous"></script>
+</body>
+</html>

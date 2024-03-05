@@ -125,6 +125,8 @@ def maps_filter(request):
             return render(request, 'mymap/map.html', context)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return render(request, 'mymap/map.html')
 
 
 def changes_map(request):
