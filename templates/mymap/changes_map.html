@@ -14,44 +14,12 @@
         <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
     </li>
 {% endblock %}
+
+{% block action %}
+    {% url 'changes' %}
+{% endblock %}
+
 {% block filter %}
-    <form id="myForm" method="post" action="{% url 'changes' %}" class="needs-validation" novalidate>
-        {% csrf_token %}
-        <div class="mb-3 mt-4">
-            <label for="aptid" class="form-label">ID Аптеки:</label>
-            <input type="text" class="form-control" aria-label="Sizing example input"
-                   aria-describedby="inputGroup-sizing-default" id="aptid" name="aptid" autocomplete="off">
-        </div>
-
-        <div class="mb-3 mt-4">
-            <label for="name" class="form-label">Аптека:</label>
-            <input type="text" class="form-control" aria-label="Sizing example input"
-                   aria-describedby="inputGroup-sizing-default" id="name" name="name" autocomplete="off">
-        </div>
-
-        <div class="mb-3 mt-4">
-            <label for="city" class="form-label">Місто:</label>
-            <input type="text" class="form-control" aria-label="Sizing example input"
-                   aria-describedby="inputGroup-sizing-default" id="city" name="city" autocomplete="off">
-        </div>
-
-        <div class="form-group md-3 mt-4">
-            <label for="okpo">Фірма:</label>
-            <div class="input-group">
-                <input type="text" id="okpo" name="okpo" list="okpo1" class="form-control"
-                       autocomplete="off">
-                <div class="input-group-append">
-                    <datalist id="okpo1" class="list-styled">
-                        {{ html_options|safe }}
-                    </datalist>
-                </div>
-            </div>
-        </div>
-        <br>
-        <button type="submit" class="btn btn-primary">Пошук</button>
-
-    </form>
-    <br>
     <div class="buttons-container">
         <button onclick="hideFilter()" class="bg-transparent border-0">
             <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit">
@@ -75,6 +43,7 @@
         {% endif %}
     </div>
 {% endblock %}
+
 {% block button %}
     <button onclick="hideFilter()" class="bg-transparent border-0">
         <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-in.svg" alt="Submit">
@@ -98,6 +67,7 @@
         </button>
     {% endif %}
 {% endblock %}
+
 {% block maps %}
     <div id="table" style="max-height: 700px; overflow: auto; margin-right: 50px; margin-left: -50px">
         <table class="table table-hover">
@@ -108,6 +78,7 @@
                 <th scope="col">ЕРДПОУ</th>
                 <th scope="col">Адреса</th>
                 <th scope="col">Місто</th>
+                <th scope="col">Статус</th>
             </tr>
             </thead>
             <tbody>
@@ -126,6 +97,7 @@
                                     data-item2="{{ item.2 }}"
                                     data-item3="{{ item.3 }}"
                                     data-item4="{{ item.4 }}"
+                                    data-item5="{{ item.5 }}"
                                     data-bs-toggle="modal"
                                     data-bs-target="#exampleModal"
                                     @click="openModal"
@@ -137,6 +109,7 @@
                         <td>{{ item.2 }}</td>
                         <td>{{ item.3 }}</td>
                         <td>{{ item.4 }}</td>
+                        <td>{{ item.5 }}</td>
                     </tr>
                 {% empty %}
                     <tr>
@@ -190,6 +163,10 @@
                         <label for="item_4">Місто:</label>
                         <input type="text" id="item_4" name="item_4" class="form-control" value=""
                                autocomplete="off">
+                        
+                        <label for="item_5">Статус:</label>
+                        <input type="text" id="item_5" name="item_5" class="form-control" value=""
+                               autocomplete="off">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
@@ -201,6 +178,7 @@
         </div>
     </div>
 {% endblock %}
+
 {% block script %}
     <script>
         function downData() {
@@ -214,8 +192,9 @@
             let item2 = $(event.target).data('item2');
             let item3 = $(event.target).data('item3');
             let item4 = $(event.target).data('item4');
+            let item5 = $(event.target).data('item5');
 
-            let results = [item0, item1, item2, item3, item4];
+            let results = [item0, item1, item2, item3, item4, item5];
             populateModal(results)
             $('#exampleModal').modal('show');
         });
@@ -227,6 +206,7 @@
             $('#item_2').val(results[2]);
             $('#item_3').val(results[3]);
             $('#item_4').val(results[4]);
+            $('#item_5').val(results[5]);
 
             let modalNumber = results[0];
             document.getElementById('modalNumber').innerText = 'ID Аптеки: ' + modalNumber;

@@ -44,17 +44,64 @@ def get_option():
         print(f"Error connecting to Oracle Database: {error}")
 
 
+def get_filters(request):
+    filters = {}
+    switches = []
+    if request.POST:
+        aptid = request.POST.get('aptid')
+        name = request.POST.get('name')
+        city = request.POST.get('city')
+        okpo = request.POST.get('okpo')
+        switch1 = request.POST.get('Switch1')
+        switch2 = request.POST.get('Switch2')
+        switch3 = request.POST.get('Switch3')
+        switch4 = request.POST.get('Switch4')
+
+        if aptid:
+            filters['f.ID'] = aptid
+        if name:
+            filters['f.NAME'] = name
+        if city:
+            filters['f.CITY'] = city
+        if okpo:
+            filters['ff.NAME'] = okpo
+
+        if switch1:
+            switches.append(2)
+        if switch2:
+            switches.append(3)
+        if switch3:
+            switches.append(4)
+        if switch4:
+            switches.append(7)
+
+    if switches:
+        filters['st.STATUSAPTEKAID'] = switches
+
+    return filters
+
+
+def build_conditions(filters):
+    conditions = []
+    for key, value in filters.items():
+        if value:
+            if isinstance(value, list):  # Для обработки switches
+                conditions.append(f"{key} IN ({', '.join(map(str, value))})")
+            else:
+                conditions.append(f"upper({key}) like upper('%{value}%')")
+    return conditions
+
+
 def map_view(request):
     try:
-        sql = '''select f.NAME, f.MAP_LAT, f.MAP_LNG, sa.NAME, f.CITY, ff.NAME from NAU_TEST.FIRMS f
-                    left join nau_test.firms ff on ff.id = f.PARENTID
-                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 
-                    else f.statusaptekaid end statusaptekaid
-                    from NAU_TEST.FIRMS f 
-                    left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                    left join nau_test.STATUSAPTEKA sa on sa.id = st.STATUSAPTEKAID
-                    where f.MAP_LAT is not null and f.city is not null and st.STATUSAPTEKAID in (2, 3, 4, 7)
-                    and not f.id = 501413'''
+        sql = '''SELECT f.NAME, f.MAP_LAT, f.MAP_LNG, sa.NAME, f.CITY, ff.NAME FROM NAU_TEST.FIRMS f
+                    LEFT JOIN nau_test.firms ff ON ff.id = f.PARENTID
+                    LEFT JOIN (SELECT f.id firmid, CASE WHEN tc.isclosed = 1 THEN 7 ELSE f.statusaptekaid END statusaptekaid
+                               FROM NAU_TEST.FIRMS f 
+                               LEFT JOIN nau_test.firms_temprory_closed tc ON tc.firmsid = f.id) st ON st.firmid = f.id
+                    LEFT JOIN nau_test.STATUSAPTEKA sa ON sa.id = st.STATUSAPTEKAID
+                    WHERE f.MAP_LAT IS NOT NULL AND f.city IS NOT NULL AND st.STATUSAPTEKAID IN (2, 3, 4, 7)
+                    AND f.id != 501413 and trim(f.CITY) like trim('%Київ%') '''
 
         rows = execute_sql(sql)
         html_options = get_option()
@@ -65,56 +112,33 @@ def map_view(request):
             locations.append({"name": name, "latitude": latitude, "longitude": longitude, "status": status,
                               "city": city, "okpo": okpo})
         context = {'html_options': html_options, 'locations': locations}
-    except cx_Oracle.Error as error:
-        # Обработка ошибок подключения к базе данных
-        print(f"Error connecting to Oracle Database: {error}")
-        locations = []
-        html_options = get_option()
-        context = {'html_options': html_options, 'locations': locations}
+    except Exception as e:
+        print(f"Error: {e}")
+        context = {'html_options': [], 'locations': []}
 
     return render(request, 'mymap/map.html', context)
 
 
 def maps_filter(request):
     if request.method == 'POST':
-        aptid = request.POST.get('aptid')
-        name = request.POST.get('name')
-        city = request.POST.get('city')
-        okpo = request.POST.get('okpo')
+        filters = get_filters(request)
+        conditions = build_conditions(filters)
 
-        filters = {}
-        if aptid:
-            filters['f.ID'] = aptid
-        if name:
-            filters['f.NAME'] = name
-        if city:
-            filters['f.CITY'] = city
-        if okpo:
-            filters['ff.NAME'] = okpo
-
-        conditions = []
-        for key, value in filters.items():
-            if value:
-                conditions.append(f"upper({key}) like upper('%{value}%')")
-
-        qwr_base = '''select f.NAME, f.MAP_LAT, f.MAP_LNG, sa.NAME, f.CITY, ff.NAME from NAU_TEST.FIRMS f
-                    left join nau_test.firms ff on ff.id = f.PARENTID
-                    left join (select f.id firmid, case when tc.isclosed = 1 then 7 
-                    else f.statusaptekaid end statusaptekaid
-                    from NAU_TEST.FIRMS f 
-                    left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                    left join nau_test.STATUSAPTEKA sa on sa.id = st.STATUSAPTEKAID
-                    where f.MAP_LAT is not null and f.city is not null and st.STATUSAPTEKAID in (2, 3, 4, 7)
-                    and not f.id = 501413'''
-
-        qwr = qwr_base
+        qwr_base = '''SELECT f.NAME, f.MAP_LAT, f.MAP_LNG, sa.NAME, f.CITY, ff.NAME FROM NAU_TEST.FIRMS f
+                    LEFT JOIN nau_test.firms ff ON ff.id = f.PARENTID
+                    LEFT JOIN (SELECT f.id firmid, CASE WHEN tc.isclosed = 1 THEN 7 
+                    ELSE f.statusaptekaid END statusaptekaid
+                    FROM NAU_TEST.FIRMS f 
+                    LEFT JOIN nau_test.firms_temprory_closed tc ON tc.firmsid = f.id) st ON st.firmid = f.id
+                    LEFT JOIN nau_test.STATUSAPTEKA sa ON sa.id = st.STATUSAPTEKAID
+                    WHERE f.MAP_LAT IS NOT NULL AND f.city IS NOT NULL AND st.STATUSAPTEKAID IN (2, 3, 4, 7)
+                    AND f.id != 501413'''
 
         if conditions:
-            qwr += f" and {' AND '.join(conditions)}"
-
+            qwr_base += f" AND {' AND '.join(conditions)}"
+        print(qwr_base)
         try:
-            print(qwr)
-            results = execute_sql(qwr)
+            results = execute_sql(qwr_base)
             html_options = get_option()
             locations = []
             for result in results:
@@ -131,53 +155,39 @@ def maps_filter(request):
 
 def changes_map(request):
     if request.method == 'POST':
-        aptid = request.POST.get('aptid')
-        name = request.POST.get('name')
-        city = request.POST.get('city')
-        okpo = request.POST.get('okpo')
-
-        filters = {}
-        if aptid:
-            filters['f.ID'] = aptid
-        if name:
-            filters['f.NAME'] = name
-        if city:
-            filters['f.CITY'] = city
-        if okpo:
-            filters['ff.NAME'] = okpo
-
-        conditions = []
-        for key, value in filters.items():
-            if value:
-                conditions.append(f"upper({key}) like upper('%{value}%')")
+        filters = get_filters(request)
+        conditions = build_conditions(filters)
 
         if not filters:
-            sql = '''select f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
-                        left join nau_test.firms ff on ff.id = f.PARENTID
-                        left join (select f.id firmid, case when tc.isclosed = 1 then 7
-                        else f.statusaptekaid end statusaptekaid
-                        from NAU_TEST.FIRMS f 
-                        left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                        where st.STATUSAPTEKAID = 4'''
+            sql = '''SELECT f.id, f.name, f.okpo, f.address2, f.city, sa.NAME FROM NAU_TEST.FIRMS f
+                        LEFT JOIN nau_test.firms ff ON ff.id = f.PARENTID
+                        LEFT JOIN (SELECT f.id firmid, CASE WHEN tc.isclosed = 1 THEN 7 
+                        ELSE f.statusaptekaid END statusaptekaid
+                        FROM NAU_TEST.FIRMS f 
+                        LEFT JOIN nau_test.firms_temprory_closed tc ON tc.firmsid = f.id) st ON st.firmid = f.id
+                        LEFT JOIN nau_test.STATUSAPTEKA sa ON sa.id = st.STATUSAPTEKAID
+                        WHERE st.STATUSAPTEKAID IN (2, 3, 4, 7)'''
         else:
-            sql = f'''select  f.id, f.name, f.okpo, f.address2, f.city from NAU_TEST.FIRMS f
-                        left join nau_test.firms ff on ff.id = f.PARENTID
-                        left join (select f.id firmid, case when tc.isclosed = 1 then 7 
-                        else f.statusaptekaid end statusaptekaid
-                        from NAU_TEST.FIRMS f 
-                        left join nau_test.firms_temprory_closed tc on tc.firmsid = f.id) st on st.firmid = f.id
-                        where st.STATUSAPTEKAID = 4 and {' AND '.join(conditions)} '''
-
+            conditions_str = ' AND '.join(conditions)
+            sql = f'''SELECT f.id, f.name, f.okpo, f.address2, f.city, sa.NAME FROM NAU_TEST.FIRMS f
+                        LEFT JOIN nau_test.firms ff ON ff.id = f.PARENTID
+                        LEFT JOIN (SELECT f.id firmid, CASE WHEN tc.isclosed = 1 THEN 7 
+                        ELSE f.statusaptekaid END statusaptekaid
+                        FROM NAU_TEST.FIRMS f 
+                        LEFT JOIN nau_test.firms_temprory_closed tc ON tc.firmsid = f.id) st ON st.firmid = f.id
+                        LEFT JOIN nau_test.STATUSAPTEKA sa ON sa.id = st.STATUSAPTEKAID 
+                        WHERE st.STATUSAPTEKAID IN (2, 3, 4, 7) AND {conditions_str}'''
+        print(sql)
         try:
-            print(sql)
             results = execute_sql(sql)
-            # Выполните фильтрацию данных на основе введенных пользователем значений
-            return render(request, 'mymap/changes_map.html', {'results': results})
+            html_options = get_option()
+            context = {'html_options': html_options, 'results': results}
+            return render(request, 'mymap/changes_map.html', context)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-
     else:
-        return render(request, 'mymap/changes_map.html')
+        html_options = get_option()
+        return render(request, 'mymap/changes_map.html', {'html_options': html_options})
 
 
 def download_data(request):

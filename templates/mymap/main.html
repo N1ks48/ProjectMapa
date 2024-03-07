@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -24,6 +24,16 @@
         .buttons-container button {
             margin-right: 10px; /* Добавляем небольшое расстояние между кнопками */
         }
+
+        #myForm {
+            position: relative;
+        }
+
+        .float-right {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -35,16 +45,74 @@
     <div class="row" id="home">
         <!-- Фильтр слева, занимает 30% ширины -->
         <div id="myForm" class="col-md-2 border border rounded bg-light text-dark"
-             style="height: 510px; margin-left: 40px; margin-right: 80px; display: block;">
+             style="height: 410px; margin-left: 40px; margin-right: 80px; display: block;">
+            <form method="post" action="{% block action %}{% endblock %}" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <h4 class="mmb-3 ml-auto mr-auto mt-2 text-center">Фільтр:</h4>
+                <div class="mb-3">
+                    <input type="text" class="form-control mb-2" aria-label="Sizing example input"
+                           aria-describedby="inputGroup-sizing-default" id="aptid" name="aptid" autocomplete="off"
+                           placeholder="ID Аптеки:">
+                </div>
+
+                <div class="mb-3">
+                    <input type="text" class="form-control mb-2" aria-label="Sizing example input"
+                           aria-describedby="inputGroup-sizing-default" id="name" name="name" autocomplete="off"
+                           placeholder="Аптека\Адреса:">
+                </div>
+
+                <div class="mb-3">
+                    <input type="text" class="form-control mb-2" aria-label="Sizing example input"
+                           aria-describedby="inputGroup-sizing-default" id="city" name="city" autocomplete="off"
+                           placeholder="Місто:">
+                </div>
+
+                <div class="form-group md-3">
+                    <div class="input-group">
+                        <input type="text" id="okpo" name="okpo" list="okpo1" class="form-control mb-2"
+                               autocomplete="off" placeholder="Фірма:">
+                        <div class="input-group-append">
+                            <datalist id="okpo1" class="list-styled">
+                                {{ html_options|safe }}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="Switch1" name="Switch1" value="2">
+                            <label class="form-check-label" for="Switch1">Куплено</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="Switch2" name="Switch2" value="3">
+                            <label class="form-check-label" for="Switch2">Ліцензія</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-2">
+                            <input class="form-check-input" type="checkbox" id="Switch3" name="Switch3" value="4">
+                            <label class="form-check-label" for="Switch3">Працює</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="Switch4" name="Switch4" value="7">
+                            <label class="form-check-label" for="Switch4">Тимчасово закрита</label>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary float-right">Пошук</button>
+            </form>
             {% block filter %}
             {% endblock %}
         </div>
-
+        <!-- Скрытый блок кнопок, появляется когда скрывается фильтр -->
         <div class="col-md-1" style="display: none; margin-left: 50px">
             {% block button %}
             {% endblock %}
         </div>
-        <div class="col-md-8">
+        <!-- Оставшееся место занимает таблица или карта-->
+        <div class="col-md-9">
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="maps" role="tabpanel" aria-labelledby="maps-tab">
                     {% block maps %}
@@ -54,6 +122,7 @@
         </div>
     </div>
 </div>
+<!-- Модальное окно для карты -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -104,7 +173,7 @@
     </div>
 </div>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
+<!-- Скрипты для каждой страницы свои -->
 {% block script %}
 {% endblock %}
 <script>
@@ -120,6 +189,7 @@
             mapsDiv.parentElement.classList.add('col-md-10');
             mapImage.src = "/static/images/zoom-in.svg";
             buttonsDiv.style.display = 'block'; // Показываем кнопки
+            mapsDiv.style.marginLeft = '-30px'; // Меняем стили для таблицы
 
         } else {
             myForm.style.display = 'block';
@@ -131,7 +201,7 @@
     }
 </script>
 
-<!-- Добавлены скрипты Bootstrap -->
+<!-- Добавление скриптов Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
         integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
         crossorigin="anonymous"></script>

@@ -14,52 +14,23 @@
         <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
     </li>
 {% endblock %}
-{% block filter %}
-    <form method="post" action="{% url 'maps_filter' %}" class="needs-validation" novalidate>
-        {% csrf_token %}
-        <div class="mb-3 mt-4">
-            <label for="aptid" class="form-label">ID Аптеки:</label>
-            <input type="text" class="form-control" aria-label="Sizing example input"
-                   aria-describedby="inputGroup-sizing-default" id="aptid" name="aptid" autocomplete="off">
-        </div>
 
-        <div class="mb-3 mt-4">
-            <label for="name" class="form-label">Аптека\Адреса:</label>
-            <input type="text" class="form-control" aria-label="Sizing example input"
-                   aria-describedby="inputGroup-sizing-default" id="name" name="name" autocomplete="off">
-        </div>
-
-        <div class="mb-3 mt-4">
-            <label for="city" class="form-label">Місто:</label>
-            <input type="text" class="form-control" aria-label="Sizing example input"
-                   aria-describedby="inputGroup-sizing-default" id="city" name="city" autocomplete="off">
-        </div>
-
-        <div class="form-group md-3 mt-4">
-            <label for="okpo">Фірма:</label>
-            <div class="input-group">
-                <input type="text" id="okpo" name="okpo" list="okpo1" class="form-control"
-                       autocomplete="off">
-                <div class="input-group-append">
-                    <datalist id="okpo1" class="list-styled">
-                        {{ html_options|safe }}
-                    </datalist>
-                </div>
-            </div>
-        </div>
-        <br>
-        <button type="submit" class="btn btn-primary">Пошук</button>
-    </form>
-    <br>
-    <button onclick="hideFilter()" class="bg-transparent border-0">
-        <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit">
-    </button>
-
-    <button onclick="hideMaps()" class="bg-transparent border-0">
-        <img class="mt-1" width="32" height="32" src="/static/images/maps72040.png" alt="Submit">
-    </button>
-
+{% block action %}
+    {% url 'maps_filter' %}
 {% endblock %}
+
+{% block filter %}
+    
+        <button onclick="hideFilter()" class="bg-transparent border-0">
+            <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit">
+        </button>
+
+        <button onclick="hideMaps()" class="bg-transparent border-0">
+            <img class="mt-1" width="32" height="32" src="/static/images/maps72040.png" alt="Submit">
+        </button>
+    
+{% endblock %}
+
 {% block button %}
     <button onclick="hideFilter()" class="bg-transparent border-0">
         <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-in.svg" alt="Submit">
@@ -69,6 +40,7 @@
         <img class="mt-1" width="32" height="32" src="/static/images/maps72040.png" alt="Submit">
     </button>
 {% endblock %}
+
 {% block maps %}
     <!-- Карта, занимает оставшиеся 70% ширины -->
     <div id="map" class="border border rounded bg-light text-dark"
@@ -120,6 +92,7 @@
     {% endif %}
 
 {% endblock %}
+
 {% block script %}
     <script>
         //Вывод данных на карту
