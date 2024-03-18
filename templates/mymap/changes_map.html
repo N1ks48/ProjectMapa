@@ -20,9 +20,11 @@
 {% endblock %}
 
 {% block filter %}
-    <div class="buttons-container">
-        <button onclick="hideFilter()" class="bg-transparent border-0">
-            <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit">
+    <div id=MyButtons class="buttons-container float-left">
+        <button onclick="hideFilter()" class="btn btn-light btn-sm">
+            <img id="mapImage" class="img-fluid" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit"
+                 data-toggle="tooltip"
+                 title="Приховати фільтр">
         </button>
         {% if results %}
             <form action="{% url 'download_data' %}" method="post">
@@ -30,23 +32,30 @@
                 {% for result in results %}
                     <input type="hidden" name="results" value="{{ result }}">
                 {% endfor %}
-                <button type="submit" class="bg-transparent border-0">
-                    <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
-                         alt="Submit">
+                <button type="submit" class="btn btn-light btn-sm">
+                    <img class="img-fluid" width="32" height="32" src="/static/images/image_2023.png"
+                         alt="Submit" data-toggle="tooltip"
+                         title="Завантажити XLSX-файл">
                 </button>
             </form>
         {% else %}
-            <button type="submit" onclick="downData()" class="bg-transparent border-0">
-                <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
-                     alt="Submit">
+            <button type="submit" onclick="downData()" class="btn btn-light btn-sm">
+                <img class="img-fluid" width="32" height="32" src="/static/images/image_2023.png"
+                     alt="Submit" data-toggle="tooltip"
+                     title="Завантажити XLSX-файл">
             </button>
         {% endif %}
+        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">
+            <span class="material-symbols-outlined">add</span>
+        </button>
     </div>
 {% endblock %}
 
 {% block button %}
-    <button onclick="hideFilter()" class="bg-transparent border-0">
-        <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-in.svg" alt="Submit">
+    <button onclick="hideFilter()" class="btn btn-light btn-sm">
+        <img id="mapImage" class="img-fluid" width="32" height="32" src="/static/images/zoom-in.svg" alt="Submit"
+             data-toggle="tooltip"
+             title="Показати фільтр">
     </button>
     <br>
     {% if results %}
@@ -55,17 +64,23 @@
             {% for result in results %}
                 <input type="hidden" name="results" value="{{ result }}">
             {% endfor %}
-            <button type="submit" class="bg-transparent border-0">
-                <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
-                     alt="Submit">
+            <button type="submit" class="btn btn-light btn-sm">
+                <img class="img-fluid" width="32" height="32" src="/static/images/image_2023.png"
+                     alt="Submit" data-toggle="tooltip"
+                     title="Завантажити XLSX-файл">
             </button>
         </form>
     {% else %}
-        <button type="submit" onclick="downData()" class="bg-transparent border-0">
-            <img class="mt-1" width="32" height="32" src="/static/images/image_2023.png"
-                 alt="Submit">
+        <button type="submit" onclick="downData()" class="btn btn-light btn-sm">
+            <img class="img-fluid" width="32" height="32" src="/static/images/image_2023.png"
+                 alt="Submit" data-toggle="tooltip"
+                 title="Завантажити XLSX-файл">
         </button>
+        <br>
     {% endif %}
+    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#createModal">
+        <span class="material-symbols-outlined">add</span>
+    </button>
 {% endblock %}
 
 {% block maps %}
@@ -163,7 +178,7 @@
                         <label for="item_4">Місто:</label>
                         <input type="text" id="item_4" name="item_4" class="form-control" value=""
                                autocomplete="off">
-                        
+
                         <label for="item_5">Статус:</label>
                         <input type="text" id="item_5" name="item_5" class="form-control" value=""
                                autocomplete="off">
@@ -174,6 +189,23 @@
                     </div>
                 </form>
 
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createModalLabel">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h5>Текст</h5>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
             </div>
         </div>
     </div>

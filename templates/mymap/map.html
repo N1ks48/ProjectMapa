@@ -20,34 +20,45 @@
 {% endblock %}
 
 {% block filter %}
-    
-        <button onclick="hideFilter()" class="bg-transparent border-0">
-            <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit">
+    <div id=MyButtons class="buttons-container float-left">
+        <button onclick="hideFilter()" class="btn btn-light btn-sm">
+            <img id="mapImage" class="img-fluid" width="32" height="32" src="/static/images/zoom-out.svg" alt="Submit"
+                 data-toggle="tooltip"
+                 title="Приховати фільтр">
         </button>
 
-        <button onclick="hideMaps()" class="bg-transparent border-0">
-            <img class="mt-1" width="32" height="32" src="/static/images/maps72040.png" alt="Submit">
+        <button onclick="hideMaps()" class="btn btn-light btn-sm">
+            <img class="img-fluid" width="32" height="32" src="/static/images/maps72040.png" alt="Submit"
+                 data-toggle="tooltip"
+                 title="Приховати/показати карту">
         </button>
-    
+
+    </div>
+
 {% endblock %}
 
 {% block button %}
-    <button onclick="hideFilter()" class="bg-transparent border-0">
-        <img id="mapImage" class="mt-1" width="32" height="32" src="/static/images/zoom-in.svg" alt="Submit">
+
+    <button onclick="hideFilter()" class="btn btn-light btn-sm">
+        <img id="mapImage" class="img-fluid" width="32" height="32" src="/static/images/zoom-in.svg" alt="Submit"
+             data-toggle="tooltip"
+             title="Показати фільтр">
     </button>
     <br>
-    <button onclick="hideMaps()" class="bg-transparent border-0">
-        <img class="mt-1" width="32" height="32" src="/static/images/maps72040.png" alt="Submit">
+    <button onclick="hideMaps()" class="btn btn-light btn-sm">
+        <img class="img-fluid" width="32" height="32" src="/static/images/maps72040.png" alt="Submit"
+             data-toggle="tooltip"
+             title="Приховати/показати карту">
     </button>
 {% endblock %}
 
 {% block maps %}
     <!-- Карта, занимает оставшиеся 70% ширины -->
     <div id="map" class="border border rounded bg-light text-dark"
-         style="height: 510px; display: block;"></div>
+         style="height: 510px; max-width: 1700px; margin-left: -40px; display: block;"></div>
     {% if 'mapsfilter/' in request.path %}
         <div id="table"
-             style="max-height: 300px; overflow: auto;">
+             style="max-height: 300px; max-width: 1700px; margin-left: -40px; overflow: auto;">
             <div class="mt-2">
                 <table class="table table-hover">
                     <thead class="sticky-top" style="background-color: rgb(236,240,245);">
